@@ -20,6 +20,9 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KH
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/stripcontroll");
+
+
+
 void setColor(int a_r, int a_g, int a_b, int a_a)
 {
   Serial.print(F("Change Color: r:"));
@@ -101,17 +104,28 @@ void registerEvents()
      });
 }
 
-void parseCommand(JsonObject& a_rJson)
+void parseCommand(String& a_rJsonString)
 {
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject& jsonObject = jsonBuffer.parseObject(a_rJsonString);
 
-  if(a_rJson["command"] == "solidcolor")
+
+  if(!jsonObject.success())
   {
-    int r = a_rJson["data"][0];
-    int g = a_rJson["data"][1];
-    int b = a_rJson["data"][2];
+    Serial.println("parseObject() failed");
+    return;
+  }
+  if(jsonObject["command"] == "solidcolor")
+  {
+    float r = jsonObject["data"][0];
+    float g = jsonObject["data"][1];
+    float b = jsonObject["data"][2];
+    Serial.printf("r:%f,g:%f,b:%f\n",r,g,b );
 
 
-    setColor(r,g,b,0);
+
+
+    setColor(r*255,g*255,b*255,0);
   }
 }
 
@@ -142,11 +156,10 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
        {
          data[len] = 0;
          String json = String((char*)data);
-         StaticJsonBuffer<200> jsonBuffer;
 
-         JsonObject& root = jsonBuffer.parseObject(json);
+
          Serial.println(json);
-         parseCommand(root);
+         parseCommand(json);
        }
        else
        {
@@ -160,37 +173,9 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
          client->text("I got your text message");
        else
          client->binary("I got your binary message");
-     } else {
-       //message is comprised of multiple frames or the frame is split into multiple packets
-       if(info->index == 0){
-         if(info->num == 0)
-           os_printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-         os_printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
-       }
-
-       os_printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT)?"text":"binary", info->index, info->index + len);
-       if(info->message_opcode == WS_TEXT){
-         data[len] = 0;
-         os_printf("%s\n", (char*)data);
-       } else {
-         for(size_t i=0; i < len; i++){
-           os_printf("%02x ", data[i]);
-         }
-         os_printf("\n");
-       }
-
-       if((info->index + len) == info->len){
-         os_printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
-         if(info->final){
-           os_printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT)?"text":"binary");
-           if(info->message_opcode == WS_TEXT)
-             client->text("I got your text message");
-           else
-             client->binary("I got your binary message");
-         }
-       }
      }
    }
+   delay(16);
 }
 
 
