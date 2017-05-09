@@ -1,16 +1,25 @@
 <html>
 	<head>
-
-		<script src="js/jscolor.min.js"></script>
-		<script src="js/jquery.min.js"></script>
-		<script src="js/jquery-watch.min.js"></script>
-		<script src='http://nornagon.github.com/thistle/thistle.js'></script>
+		<link rel="stylesheet" type="text/css" href="css/style.css">
+		<script src="http://nornagon.github.com/thistle/thistle.js"></script>
 	</head>
-
 	<body>
-		<input class="jscolor" value="ab2567">
+		<span class="title">ESP8266 WS2812b LED Strip</span>
 
-		<div id="asd"></div>
+		<div id="picker_container"></div>
+
+		<ul class="programs">
+			<li>
+				<button class="btn">Blink</button>
+			</li>
+			<li>
+				<button class="btn">Plasma</button>
+			</li>
+			<li>
+				<button class="btn">HSV</button>
+			</li>
+		</ul>
+
+		<script src="js/main.js"></script>
 	</body>
 </html>
-<script src="js/main.js"></script>
