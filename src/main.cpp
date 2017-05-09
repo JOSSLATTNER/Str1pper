@@ -4,23 +4,39 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Hash.h>
+#include <stdlib.h>
+#include <cmath>
+#include <functional>
+
 
 
 extern "C" {
 #include "user_interface.h"
 }
+
+enum LEDModul
+{
+  NONE,
+  PLASMA,
+  BLINK,
+  SOLIDCOLOR
+};
+
+
 const char* ssid = "o2-WLAN51";
 const char* password = "6689171153799911";
 const bool apMode = false;
 const char WiFiAPPSK[] = "";
 
 #define LEDPIN 0
-#define NUMPIXELS 300
+int NUMPIXELS = 30;
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/stripcontroll");
 
+LEDModul currentModul = LEDModul::NONE;
+double timer;
 
 
 void setColor(int a_r, int a_g, int a_b, int a_a)
@@ -40,6 +56,33 @@ void setColor(int a_r, int a_g, int a_b, int a_a)
   pixels.show();
 }
 
+
+void plasma()
+{
+  for(int i = 0 ; i < NUMPIXELS; ++i)
+  {
+      float steps = (float)NUMPIXELS / 1.0;
+      float currentStep = i / steps;
+    float cx = currentStep + 0.5 * sin(timer/5.0);
+    float cy = currentStep+0.5 * cos(timer/3.0);
+
+    pixels.setPixelColor(i,pixels.Color(cx*255,cy*255,0));
+  }
+}
+
+void laufsinus()
+{
+  //Serial.print("Plama!");
+  for(int i = 0 ; i < NUMPIXELS; ++i)
+  {
+    float steps = (float)NUMPIXELS / 3.0;
+    float currentStep = i / steps;
+
+    float s = (sin(currentStep*6.28-1.57+timer)*0.5+0.5)*255;
+      pixels.setPixelColor(i,pixels.Color(s,0,0));
+  }
+//  pixels.show();
+}
 
 void setupWifi()
 {
@@ -102,6 +145,19 @@ void registerEvents()
        setColor(255,0,0,255);
        request->send(200, "text/plain", "Red");
      });
+     server.on("/plasma", HTTP_GET, [](AsyncWebServerRequest *request){
+        //plasma();
+        currentModul = LEDModul::PLASMA;
+         request->send(200, "text/plain", "Plasma!!!");
+       });
+  /*   server.on("/SetLedAmount", HTTP_GET, [](AsyncWebServerRequest *request){
+       char buffer[10];
+
+         AsyncWebParameter* r = request->getParam("amount",true);
+         NUMPIXELS = r->value().toInt();
+
+         request->send(200, "text/plain", itoa(NUMPIXELS,buffer,10) );
+       });*/
 }
 
 void parseCommand(String& a_rJsonString)
@@ -115,17 +171,20 @@ void parseCommand(String& a_rJsonString)
     Serial.println("parseObject() failed");
     return;
   }
+
+
+
   if(jsonObject["command"] == "solidcolor")
   {
     float r = jsonObject["data"][0];
     float g = jsonObject["data"][1];
     float b = jsonObject["data"][2];
-    Serial.printf("r:%f,g:%f,b:%f\n",r,g,b );
-
-
-
 
     setColor(r*255,g*255,b*255,0);
+  }
+  if(jsonObject["command"] == "plasma")
+  {
+    //plasma();
   }
 }
 
@@ -175,7 +234,7 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
          client->binary("I got your binary message");
      }
    }
-   delay(16);
+   delay(1);
 }
 
 
@@ -242,6 +301,14 @@ void setup(void)
 
 void loop(void)
 {
+  switch(currentModul)
+  {
+    case LEDModul::PLASMA:
+      plasma();
+    break;
+  }
 
+timer += 0.016;
+//delay(16);
  pixels.show();
 }
