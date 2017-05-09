@@ -8,7 +8,7 @@
 #include <cmath>
 #include <functional>
 
-
+#include "CFloatScriptVariable.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -37,6 +37,8 @@ AsyncWebSocket ws("/stripcontroll");
 
 LEDModul currentModul = LEDModul::NONE;
 double timer;
+
+Str1pper::CFloatScriptVariable* fsv;
 
 
 void setColor(int a_r, int a_g, int a_b, int a_a)
@@ -292,6 +294,7 @@ void setup(void)
   Serial.print( F("Vcc: ") ); Serial.println(ESP.getVcc());
   Serial.println();
 
+  fsv = new Str1pper::CFloatScriptVariable(42.0f);
 
   setupFS();
   setupLeds();
@@ -311,4 +314,6 @@ void loop(void)
 timer += 0.016;
 //delay(16);
  pixels.show();
+
+ Serial.println(*fsv->GetValue());
 }
