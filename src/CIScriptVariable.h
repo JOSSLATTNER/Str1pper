@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Str1pper
 {
   class CIScriptVariable
@@ -6,6 +8,6 @@ namespace Str1pper
     virtual ~CIScriptVariable(){}
 
   public:
-    virtual void* GetValue() = 0;
+    virtual void* GetValuePtr() = 0;
   };
 }
