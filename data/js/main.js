@@ -8,10 +8,12 @@ var picker = new thistle.Picker('rgb(129,34,203)');
 var pickerContainer = document.getElementById("picker_container");
 pickerContainer.appendChild(picker.el);
 
-connection.onopen = function () {
+connection.onopen = function ()
+{
 	console.log("connection established!");
 
-	picker.on('changed', function() {
+	picker.on('changed', function()
+	{
 	  document.body.style.backgroundColor = picker.getCSS();
 	  var args = {
 	  	'rgb' : picker.getRGB()
@@ -21,11 +23,13 @@ connection.onopen = function () {
 	});
 };
 
-connection.onmessage = function(message) {
+connection.onmessage = function(message)
+{
 	console.log(message.data);
 }
 
-function sendCommand(command, params) {
+function sendCommand(command, params)
+{
 	var o = {
 		"command" : command,
 		"data" : params
@@ -33,4 +37,11 @@ function sendCommand(command, params) {
 	var json = JSON.stringify(o);
 	console.log("sending: " + json);
 	connection.send(json);
+}
+
+function ChangeModule(i)
+{
+	sendCommand("SET_MODULE", {
+		"module" : i
+	});
 }

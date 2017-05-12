@@ -6,83 +6,128 @@
 #include <Hash.h>
 #include <stdlib.h>
 #include <cmath>
+//#include <vector>
 #include <functional>
-
-
+#include "Color.h"
 
 extern "C" {
 #include "user_interface.h"
 }
 
-enum LEDModul
-{
-  NONE,
-  PLASMA,
-  BLINK,
-  SOLIDCOLOR
-};
-
-
+//WIFI SETTINGS
 const char* ssid = "o2-WLAN51";
 const char* password = "6689171153799911";
 const bool apMode = false;
 const char WiFiAPPSK[] = "";
 
+//NEOPIXEL CONFIG
 #define LEDPIN 0
-int NUMPIXELS = 30;
+#define NUMPIXELS 300
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPIN, NEO_GRB + NEO_KHZ800);
-
+Str1pper::Color hsv2rgb_smooth(Str1pper::Color& c );
+//WEBSERVER
 AsyncWebServer server(80);
 AsyncWebSocket ws("/stripcontroll");
 
-LEDModul currentModul = LEDModul::NONE;
-double timer;
-
-
-void setColor(int a_r, int a_g, int a_b, int a_a)
+struct color
 {
-  Serial.print(F("Change Color: r:"));
-  Serial.print(a_r);
-  Serial.print(" g:");
-  Serial.print(a_g);
-  Serial.print(" b:");
-  Serial.print(a_b);
-  Serial.println("");
+  float r;
+  float g;
+  float b;
+};
 
-  for(int i = 0 ; i < NUMPIXELS; ++i)
-  {
-    pixels.setPixelColor(i,pixels.Color(a_r,a_g,a_b));
-  }
-  pixels.show();
+//MODULES
+double _Timer;
+Str1pper::Color _Color;
+
+typedef std::function<Str1pper::Color(unsigned int)> ModuleLoop_t;
+
+ModuleLoop_t module_solid = [&](unsigned int i) -> Str1pper::Color
+{
+  return _Color;
+};
+
+ModuleLoop_t module_blink = [](unsigned int i) -> Str1pper::Color
+{
+  float f = sin(_Timer) * 0.5f + 0.5f;
+  return { _Color.r * f, _Color.g * f, _Color.b * f };
+};
+
+ModuleLoop_t module_sin = [&](unsigned int i) -> Str1pper::Color
+{
+  float steps = NUMPIXELS / 3.0f;
+  float currentStep = i / steps;
+
+  float f = sin(currentStep * 6.28f - 1.57f + _Timer) * 0.5f + 0.5f;
+  return { _Color.r * f, _Color.g * f, _Color.b * f };
+};
+
+ModuleLoop_t module_plasma = [&](unsigned int i) -> Str1pper::Color
+{
+  float steps = NUMPIXELS / 1.0f;
+  float currentStep = i / steps;
+  float cx = currentStep + 0.5f * sin(_Timer / 5.0f);
+  float cy = currentStep + 0.5f * cos(_Timer / 3.0f);
+
+  return { cx, cy, 0};
+};
+
+ModuleLoop_t module_hsv = [&](unsigned int i) -> Str1pper::Color
+{
+  float currentStep = i / NUMPIXELS;
+
+  Str1pper::Color hsv;
+
+//  hsv.r = currentStep;
+  //hsv.g = 1.0f;
+//  hsv.b = 1.0f;
+
+  return hsv2rgb_smooth(hsv);
+};
+
+
+
+size_t ModuleIndex = 0;
+ModuleLoop_t Modules[] = {
+  module_solid,
+  module_blink,
+  module_sin,
+  module_plasma
+};
+
+template<typename T>
+T clamp(T x, T a, T b)
+{
+  return (x > b) ? b : (x < a) ? a : x;
 }
 
-
-void plasma()
+Str1pper::Color hsv2rgb_smooth(Str1pper::Color& c )
 {
-  for(int i = 0 ; i < NUMPIXELS; ++i)
-  {
-      float steps = (float)NUMPIXELS / 1.0;
-      float currentStep = i / steps;
-    float cx = currentStep + 0.5 * sin(timer/5.0);
-    float cy = currentStep+0.5 * cos(timer/3.0);
+  // Str1pper::Color hsv = {0.0, 4.0, 2.0};
+  // Str1pper::Color hsvmod = hsv + 6.0f * c.r;
+  //
+  // float r = fmod((double)hsvmod.r,6.0);
+  // float g = fmod((double)hsvmod.g,6.0);
+  // float b = fmod((double)hsvmod.b,6.0);
+  //
+  // r = clamp( abs(r-3.0)-1.0, 0.0, 1.0 );
+  // g = clamp( abs(g-3.0)-1.0, 0.0, 1.0 );
+  // b = clamp( abs(b-3.0)-1.0, 0.0, 1.0 );
+  //
+  //
+  // Str1pper::Color s(r,g,b);
+  //
+  // s = s + hsv;
 
-    pixels.setPixelColor(i,pixels.Color(cx*255,cy*255,0));
-  }
+	//rgb = rgb*rgb*(3.0-2.0*rgb); // cubic smoothing
+
+	return 0;//s;//c.z * mix( vec3(1.0), rgb, c.y);
 }
-
-void laufsinus()
-{
-  //Serial.print("Plama!");
-  for(int i = 0 ; i < NUMPIXELS; ++i)
-  {
-    float steps = (float)NUMPIXELS / 3.0;
-    float currentStep = i / steps;
-
-    float s = (sin(currentStep*6.28-1.57+timer)*0.5+0.5)*255;
-      pixels.setPixelColor(i,pixels.Color(s,0,0));
-  }
-//  pixels.show();
-}
+//
+// color HSVToRGB(color hsv)
+// {
+//     color rgb
+// }
 
 void setupWifi()
 {
@@ -131,84 +176,72 @@ void setupWifi()
 
 void registerEvents()
 {
-   server.on("/color", HTTP_POST, [](AsyncWebServerRequest *request){
-     AsyncWebParameter* r = request->getParam("r",true);
-     AsyncWebParameter* g = request->getParam("g",true);
-     AsyncWebParameter* b = request->getParam("b",true);
-     String a = "128";
-
-     setColor(r->value().toInt(),g->value().toInt(),b->value().toInt(),a.toInt());
-    request->send(200, "text/plain", "");
-   });
-
-   server.on("/red", HTTP_GET, [](AsyncWebServerRequest *request){
-       setColor(255,0,0,255);
-       request->send(200, "text/plain", "Red");
-     });
-     server.on("/plasma", HTTP_GET, [](AsyncWebServerRequest *request){
-        //plasma();
-        currentModul = LEDModul::PLASMA;
-         request->send(200, "text/plain", "Plasma!!!");
-       });
-  /*   server.on("/SetLedAmount", HTTP_GET, [](AsyncWebServerRequest *request){
-       char buffer[10];
-
-         AsyncWebParameter* r = request->getParam("amount",true);
-         NUMPIXELS = r->value().toInt();
-
-         request->send(200, "text/plain", itoa(NUMPIXELS,buffer,10) );
-       });*/
+  //  server.on("/color", HTTP_POST, [](AsyncWebServerRequest *request){
+  //    AsyncWebParameter* r = request->getParam("r",true);
+  //    AsyncWebParameter* g = request->getParam("g",true);
+  //    AsyncWebParameter* b = request->getParam("b",true);
+   //
+  //    setColor(r->value().toInt(),g->value().toInt(),b->value().toInt(), 128);
+  //    request->send(200, "text/plain", "");
+  //  });
+   //
+  //  server.on("/red", HTTP_GET, [](AsyncWebServerRequest *request){
+  //      setColor(255,0,0,255);
+  //      request->send(200, "text/plain", "Red");
+  //  });
 }
 
-void parseCommand(String& a_rJsonString)
+void parseCommand(String a_rJsonString)
 {
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonObject& jsonObject = jsonBuffer.parseObject(a_rJsonString);
+  StaticJsonBuffer<500> jsonBuffer;
+  JsonObject& jobj = jsonBuffer.parseObject(a_rJsonString);
+  Serial.println(a_rJsonString);
 
-
-  if(!jsonObject.success())
+  if(!jobj.success())
   {
     Serial.println("parseObject() failed");
     return;
   }
 
-
-
-  if(jsonObject["command"] == "solidcolor")
+  if(jobj["command"] == "SET_MODULE")
   {
-    float r = jsonObject["data"][0];
-    float g = jsonObject["data"][1];
-    float b = jsonObject["data"][2];
-
-    setColor(r*255,g*255,b*255,0);
+      ModuleIndex = jobj["data"]["module"];
+      Serial.print("ModulIndex:");
+      Serial.print(ModuleIndex);
   }
-  if(jsonObject["command"] == "plasma")
+  else if(jobj["command"] == "SET_COLOR")
   {
-    //plasma();
+      float r =  jobj["data"]["rgb"]["r"];
+      float g =  jobj["data"]["rgb"]["g"];
+      float b =  jobj["data"]["rgb"]["b"];
+
+      _Color = { r, g, b };
   }
 }
 
-void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len){
-  if(type == WS_EVT_CONNECT){
+void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len)
+{
+  if(type == WS_EVT_CONNECT)
+  {
      //client connected
      os_printf("ws[%s][%u] connect\n", server->url(), client->id());
-     client->printf("Hello Client %u :)", client->id());
-     client->ping();
-   } else if(type == WS_EVT_DISCONNECT){
+   }
+   else if(type == WS_EVT_DISCONNECT)
+   {
      //client disconnected
      os_printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
-   } else if(type == WS_EVT_ERROR){
+   }
+   else if(type == WS_EVT_ERROR)
+   {
      //error was received from the other end
      os_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
-   } else if(type == WS_EVT_PONG){
-     //pong message was received (in response to a ping request maybe)
-     os_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
    }
    else if(type == WS_EVT_DATA)
    {
      //data packet
      AwsFrameInfo * info = (AwsFrameInfo*)arg;
-     if(info->final && info->index == 0 && info->len == len){
+     if(info->final && info->index == 0 && info->len == len)
+     {
        //the whole message is in a single frame and we got all of it's data
        os_printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT)?"text":"binary", info->len);
        if(info->opcode == WS_TEXT)
@@ -216,23 +249,10 @@ void onEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventTyp
          data[len] = 0;
          String json = String((char*)data);
 
-
-         Serial.println(json);
          parseCommand(json);
        }
-       else
-       {
-         for(size_t i=0; i < info->len; i++)
-         {
-           os_printf("%02x ", data[i]);
-         }
-         os_printf("\n");
-       }
-       if(info->opcode == WS_TEXT)
-         client->text("I got your text message");
-       else
-         client->binary("I got your binary message");
      }
+
    }
    delay(1);
 }
@@ -249,6 +269,9 @@ void setupWebCommuncation()
   setupWebSocket();
   server.serveStatic("/", SPIFFS, "/");
   server.serveStatic("/js", SPIFFS, "/js");
+  server.serveStatic("/image", SPIFFS, "/image");
+  server.serveStatic("/css", SPIFFS, "/css");
+
   registerEvents();
   server.begin();
   Serial.println("HTTP server started");
@@ -292,7 +315,6 @@ void setup(void)
   Serial.print( F("Vcc: ") ); Serial.println(ESP.getVcc());
   Serial.println();
 
-
   setupFS();
   setupLeds();
   setupWifi();
@@ -301,14 +323,12 @@ void setup(void)
 
 void loop(void)
 {
-  switch(currentModul)
+  for (size_t i = 0; i < NUMPIXELS; ++i)
   {
-    case LEDModul::PLASMA:
-      plasma();
-    break;
+      Str1pper::Color c = Modules[ModuleIndex](i);
+      pixels.setPixelColor(i, c.r * 255, c.g * 255, c.b * 255);
   }
 
-timer += 0.016;
-//delay(16);
- pixels.show();
+  _Timer += 0.016f;
+  pixels.show();
 }
