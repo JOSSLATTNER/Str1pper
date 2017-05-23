@@ -11,7 +11,9 @@ namespace Str1pper
   class CCommand
   {
   private:
-    ECommandType m_CommandType;
+    //Operator
+
+    EOPERATOR m_Operator;
     std::unordered_map<std::string,CIScriptVariable*>* a_pStorage;
 
   public:

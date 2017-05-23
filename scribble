@@ -1,0 +1,142 @@
+float steps = NUMPIXELS / DEVISIONS;
+float currentStep = LEDID / steps;
+float sinStep = sin(currentStep*6.28-1.57+TIMER)*0.5+0.5;
+R = sinStep;
+G = 
+B = 
+
+
+
+{
+   "Modulname":"Plasma",
+   "Param":[
+      {
+         "Name":"Color A",
+         "Type":"Color"
+      },
+      {
+         "Name":"Color B",
+         "Type":"Color"
+      },
+      {
+         "Name":"Speed",
+         "Type":"Float"
+      }
+   ],
+   "Commands":[
+      {
+         "operator":"=",
+         "name":"steps",
+         "type":"float",
+         "value":{
+            "operator":"/",
+            "lefthand":"NUMPIXELS",
+            "righthand":"DEVISIONS"
+         }
+      },
+      {
+         "operator":"=",
+         "name":"currentStep",
+         "type":"float",
+         "value":{
+            "operator":"/",
+            "lefthand":"LEDID",
+            "righthand":"steps"
+         }
+      },
+      {
+         "operator":"=",
+         "name":"sinStep",
+         "type":"float",
+         "value":{
+            "operator":"()",
+            "name":"sin",
+            "param":{
+               "operator":"+",
+               "lefthand":{
+                  "operator":"-",
+                  "lefthand":{
+                     "operator":"*",
+                     "lefthand":"currentStep",
+                     "righthand":"6.28"
+                  },
+                  "righthand":"1.57"
+               },
+               "righthand":{
+                  "operator":"*",
+                  "lefthand":"Timer",
+                  "righthand":"0.5"
+               }
+            }
+         }
+      }
+   ]
+}
+
+
+
+{
+   "Modulname":"Plasma",
+   "Param":[
+      {
+         "Name":"Color A",
+         "Type":"Color"
+      },
+      {
+         "Name":"Color B",
+         "Type":"Color"
+      },
+      {
+         "Name":"Speed",
+         "Type":"Float"
+      }
+   ],
+   "Commands":[
+      {
+         "operator":"=",
+         "name":"steps",
+         "type":"float",
+         "value":{
+            "operator":"/",
+            "lefthand":"NUMPIXELS",
+            "righthand":"DEVISIONS"
+         }
+      },
+      {
+         "operator":"=",
+         "name":"currentStep",
+         "type":"float",
+         "value":{
+            "operator":"/",
+            "lefthand":"LEDID",
+            "righthand":"steps"
+         }
+      },
+      {
+         "operator":"=",
+         "name":"sinStep",
+         "type":"float",
+         "value":{
+            "operator":"()",
+            "name":"sin",
+            "param":{
+               "operator":"+",
+               "lefthand":{
+                  "operator":"-",
+                  "lefthand":{
+                     "operator":"*",
+                     "lefthand":"currentStep",
+                     "righthand":"6.28"
+                  },
+                  "righthand":"1.57"
+               },
+               "righthand":{
+                  "operator":"*",
+                  "lefthand":"Timer",
+                  "righthand":"0.5"
+               }
+            }
+         }
+      }
+   ]
+}

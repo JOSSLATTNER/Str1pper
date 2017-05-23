@@ -1,16 +1,20 @@
-#include <ESP8266WiFi.h>
-#include <Adafruit_NeoPixel.h>
-#include <ESPAsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
-#include <Hash.h>
+
 #include <stdlib.h>
 #include <cmath>
 #include <functional>
 #include <string>
+
 #include "CScriptVariable.h"
 #include "CIScriptVariable.h"
-//#include "CModul.h"
+#include "CModul.h"
+
+#include <ESP8266WiFi.h>
+#include <Hash.h>
+#include <Adafruit_NeoPixel.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
+
 
 extern "C" {
 #include "user_interface.h"
@@ -41,7 +45,8 @@ LEDModul currentModul = LEDModul::NONE;
 double timer;
 
 Str1pper::CIScriptVariable* fsv;
-//Str1pper::CModul* m;
+Str1pper::CModul* m;
+
 float* modulTime;
 
 void setColor(int a_r, int a_g, int a_b, int a_a)
@@ -298,9 +303,9 @@ void setup(void)
   Serial.println();
 
 //  fsv = new Str1pper::CScriptVariable<float>(42.0f);
-  ///m = new Str1pper::CModul();
+  m = new Str1pper::CModul();
 
-  //modulTime = m->GetVariablePtr<float>(std::string("Timer"));
+  modulTime = m->GetVariablePtr<float>(std::string("Timer"));
 
   setupFS();
   setupLeds();
@@ -320,6 +325,8 @@ void loop(void)
 timer += 0.016;
 //delay(16);
 //*modulTime = timer;
+m->SetVariable("Timer", (float)timer);
+
  pixels.show();
 
 
@@ -327,6 +334,6 @@ timer += 0.016;
 //float& asd = *(static_cast<float*>(fsv->GetValuePtr()));
 
 //asd += 1.0f;
-// Serial.println(*modulTime);
+ Serial.println(*modulTime);
  delay(50);
 }

@@ -31,13 +31,21 @@ namespace Str1pper
     template<typename T>
     T* GetVariablePtr(std::string a_rName)
     {
-    //  if(this->m_pStorage.count(a_rName) < 1)
+      if(this->m_pStorage.count(a_rName) < 1)
       {
-    //    this->m_pStorage[a_rName] = new CScriptVariable<T>();
+        this->m_pStorage[a_rName] = new CScriptVariable<T>();
       }
 
-    //  T* tmp =  static_cast<float*>(this->m_pStorage[a_rName]->GetValuePtr());
-      return  0;
+      T* tmp =  static_cast<float*>(this->m_pStorage[a_rName]->GetValuePtr());
+      return  tmp;
+    }
+
+    template<typename T>
+    void SetVariable(std::string a_Name, T a_Value)
+    {
+      T* pTmp =  this->GetVariablePtr<T>(a_Name);
+
+      *pTmp = a_Value;
     }
 
   };
