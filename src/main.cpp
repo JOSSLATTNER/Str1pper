@@ -1,14 +1,19 @@
+
+#include <stdlib.h>
+#include <cmath>
+//#include <vector>
+#include <functional>
+
+#include "Color.h"
+#include "Timer.h"
+
+
 #include <ESP8266WiFi.h>
 #include <Adafruit_NeoPixel.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Hash.h>
-#include <stdlib.h>
-#include <cmath>
-//#include <vector>
-#include <functional>
-#include "Color.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -28,6 +33,7 @@ Str1pper::Color hsv2rgb_smooth(Str1pper::Color& c );
 //WEBSERVER
 AsyncWebServer server(80);
 AsyncWebSocket ws("/stripcontroll");
+Str1pper::Timer t;
 
 struct color
 {
@@ -329,6 +335,7 @@ void loop(void)
       pixels.setPixelColor(i, c.r * 255, c.g * 255, c.b * 255);
   }
 
-  _Timer += 0.016f;
+  t.Tick();
+  
   pixels.show();
 }
