@@ -6,6 +6,7 @@
 
 #include "Color.h"
 #include "Timer.h"
+#include "Updater.h"
 
 
 #include <ESP8266WiFi.h>
@@ -34,7 +35,7 @@ Str1pper::Color hsv2rgb_smooth(Str1pper::Color& c );
 AsyncWebServer server(80);
 AsyncWebSocket ws("/stripcontroll");
 Str1pper::Timer t;
-
+Str1pper::Updater updater("http://www.josslattner.de/esp/str1pper.bin",2000);
 struct color
 {
   float r;
@@ -336,6 +337,7 @@ void loop(void)
   }
 
   t.Tick();
-  
+  updater.CheckForUpdate(t.GetDeltaTime());
+
   pixels.show();
 }

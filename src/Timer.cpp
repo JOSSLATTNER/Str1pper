@@ -2,9 +2,12 @@
 
 namespace Str1pper
 {
-  Timer::Timer():
-  m_CurrentTick(millis()/1000)
-  {}
+  Timer::Timer()
+  {
+
+    m_CurrentTick = millis();
+
+  }
 
   Timer::~Timer()
   {}
@@ -14,17 +17,20 @@ namespace Str1pper
 
     this->m_PreviousTick = this->m_CurrentTick;
     this->m_CurrentTick = millis();
+    this->m_DeltaTime = this->m_CurrentTick - this->m_PreviousTick;
 
-    Serial.println(this->m_PreviousTick);
-    Serial.println(this->m_CurrentTick);
-    Serial.println(this->m_CurrentTick - this->m_PreviousTick);
-    Serial.println();
+
+    //  Serial.println("------Time------");
+    //  Serial.println(this->m_PreviousTick);
+    //  Serial.println(this->m_CurrentTick);
+    //  Serial.println(this->m_DeltaTime);
+    //  Serial.println();
 
   }
 
-  unsigned long Timer::GetDeltaTime()
+  float Timer::GetDeltaTime()
   {
-    return this->m_PreviousTick - this->m_CurrentTick;
+    return this->m_DeltaTime;
   }
 
   unsigned long  Timer::GetTotalTime()
