@@ -16,9 +16,7 @@ class Rest
 		std::string WIFI_SSID = "o2-WLAN51";
 		std::string WIFI_PASS = "6689171153799911";
 
-		AsyncWebServer* server;
-		AsyncWebSocket* ws;
-		AsyncEventSource* events;
+
 
 	public:
 		Rest();

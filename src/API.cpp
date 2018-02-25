@@ -3,8 +3,8 @@
 namespace LEDCNTRL
 {
 
-	API::API(LEDControll * pLEDControll):
-		m_pControll(pLEDControll)
+	API::API(LEDControl * pLEDControl):
+		m_pControll(pLEDControl)
 	{
 	}
 

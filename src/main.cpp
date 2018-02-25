@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include "Rest.h"
 #include "API.h"
-#include "LEDControll.h"
+#include "LEDControl.h"
 #include <SPIFFS.h>
 
 Rest* pRest;
-LEDCNTRL::LEDControll* pController;
+LEDCNTRL::LEDControl* pController;
 LEDCNTRL::API* pAPI;
 
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
@@ -61,10 +61,10 @@ void setup()
     setupFS();
 
     pRest = new Rest();
-    pController = new LEDCNTRL::LEDControll();
+    pController = new LEDCNTRL::LEDControl();
     pAPI = new LEDCNTRL::API(pController);
 
-    int c = pAPI->createChain({ 1 ,18,LEDCNTRL::LED_WS2812B_V2 });
+    int c = pAPI->createChain({ 1 ,18,LEDCNTRL::LED_types::LED_TYPE_WS2812b_V2 });
     int s = pAPI->appendStrand(0, { 12,128 });
 
     pAPI->initChain(c);
@@ -86,7 +86,7 @@ void loop()
 {
   while(true)
   {
-    pController->update();
+    //pController->update();
   }
 }
 

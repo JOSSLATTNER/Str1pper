@@ -1,21 +1,25 @@
 #include "Rest.h"
 
+  AsyncWebServer server(80);
+  AsyncWebSocket ws("/ws");
+  AsyncEventSource events();
+
 Rest::Rest()
 {
-	server = new AsyncWebServer(80);
-	ws = new AsyncWebSocket("/ws");
+	//server = new AsyncWebServer(80);
+	//ws = new AsyncWebSocket("/ws");
 
 	initWifi();
 	initWebsocket();
 	registerEvents();
-	server->begin();
+	server.begin();
 }
 
 
 Rest::~Rest()
 {
-	delete(server);
-	delete(ws);
+	//delete(server);
+	//delete(ws);
 }
 
 void Rest::initWifi()
@@ -62,27 +66,26 @@ void Rest::initWebsocket()
 {
 	using namespace std::placeholders;
 	
-
-
 	std::function<void(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len)> f = std::bind(&Rest::onEvent, this, _1,_2,_3,_4,_5,_6 );
-	this->ws->onEvent(f);
-	server->addHandler(ws);
+	ws.onEvent(f);
+	server.addHandler(&ws);
 	Serial.println("Init Websocket!");
 }
 
 void Rest::initWebcontent()
 {
-	server->serveStatic("/", SPIFFS, "/");
-	server->serveStatic("/js", SPIFFS, "/js");
-  	server->serveStatic("/image", SPIFFS, "/image");
-  	server->serveStatic("/css", SPIFFS, "/css");
+	server.serveStatic("/", SPIFFS, "/");
+  server.serveStatic("/index.htm", SPIFFS, "/index.htm");
+	server.serveStatic("/js", SPIFFS, "/js");
+  	//server.serveStatic("/image", SPIFFS, "/image");
+  	server.serveStatic("/css", SPIFFS, "/css");
 }
 
 
 void Rest::registerEvents()
 {
 	Serial.println("Register Events!");
-    server->on("/getChains", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/getChains", HTTP_POST, [](AsyncWebServerRequest *request)
     {
     	Serial.println("Color Event!");
       AsyncWebParameter* r = request->getParam("r",true);

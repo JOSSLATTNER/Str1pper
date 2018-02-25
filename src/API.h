@@ -1,6 +1,6 @@
 #pragma once
 
-#include "LEDControll.h"
+#include "LEDControl.h"
 #include <string>
 #include <sstream>
 
@@ -9,10 +9,10 @@ namespace LEDCNTRL
 	class API
 	{
 	private:
-		LEDControll* m_pControll;
+		LEDControl* m_pControll;
 
 	public:
-		API(LEDControll* pLEDControll);
+		API(LEDControl* pLEDControl);
 		~API();
 
 	public:
