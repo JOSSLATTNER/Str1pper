@@ -19,31 +19,25 @@ namespace LEDCNTRL
 		std::string getChains();
 		std::string getChain(int id);
 		
-		std::string getStrands(int chainID);
-		std::string getStrand(int chainID, int strandID);
+		std::string getStrips(int chainID);
+		std::string getStrip(int chainID, int stripID);
 		
 		std::string getModuls();
-		std::string getStrandModulConfig(uint32_t chainID, uint32_t strandID, EModul modulID);
+		std::string getStripModulConfig(uint32_t chainID, uint32_t stripID, EModul modulID);
 		static std::string getModulName(uint32_t modulID);
 
 		
 		void setChainModul(EModul ModulID, uint32_t chainID);
-		void setStrandModul(EModul modulID, int chainID, int strandID);
+		void setStripModul(EModul modulID, int chainID, int stripID);
 		
 		template<typename T>
-		void setStrandConfig(int chainID, int strandID, T const & cfg)
+		void setStripConfig(int chainID, int stripID, T const & cfg)
 		{
-			this->m_pControll->setStrandConfig<T>(chainID, strandID, cfg);
-		}
-
-		template <typename T>
-		void setStrandConfig(T const& cfg, int chainID, int strandID)
-		{
-			this->m_pControll->setStrandConfig(chainID, strandID, cfg);
+			this->m_pControll->setStripConfig<T>(chainID, stripID, cfg);
 		}
 
 		void initChain(uint32_t chainID);
-		uint32_t createChain(strandchain_t chainDesc);
-		uint32_t appendStrand(int chainID, strand_t strandDesc);
+		uint32_t createChain(stripchain_t chainDesc);
+		uint32_t appendStrip(int chainID, strip_t stripDesc);
 	};
 }

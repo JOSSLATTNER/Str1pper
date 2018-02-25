@@ -11,6 +11,8 @@
 #include <functional>
 #include "API.h"
 
+#include "LEDControl.h"
+
 
 namespace LEDCNTRL
 {
@@ -18,7 +20,7 @@ namespace LEDCNTRL
 	{
 		private:
 			std::string WIFI_SSID = "xxxxx";
-			std::string WIFI_PASS = "xxxxx";
+			std::string WIFI_PASS = "xxxxxx";
 
 		private:
 			AsyncWebServer* pServer;

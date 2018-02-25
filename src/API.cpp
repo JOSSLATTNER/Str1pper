@@ -34,7 +34,7 @@ namespace LEDCNTRL
 	{
 		std::stringstream ss;
 
-		const strandchain_t& chain = this->m_pControll->getChain(chainID);
+		const stripchain_t& chain = this->m_pControll->getChain(chainID);
 
 		ss << "{";
 		ss << "\"chainid\":\""  << chain.id <<   "\",";
@@ -43,26 +43,26 @@ namespace LEDCNTRL
 		ss << "\"rmtchannel\":\""  << chain.rmtChannel <<   "\",";
 		ss << "\"totalpixel\":\""  << chain.totalPixel <<   "\",";
 		ss << "\"isinit\":\""  << chain.init <<   "\",";
-		ss << "\"strand\":" + getStrands(chainID) ;
+		ss << "\"strip\":" + getStrips(chainID) ;
 		ss << "}";
 
 		return ss.str();
 	}
 
-	std::string  API::getStrands(int chainID)
+	std::string  API::getStrips(int chainID)
 	{
 		std::stringstream ss;
 		ss << "{";
 
-		ss << "\"strandcount\":\""  << this->m_pControll->getChain(chainID).pStrands.size() <<   "\",";
-		ss << "\"strands\":";
+		ss << "\"stripcount\":\""  << this->m_pControll->getChain(chainID).pStrips.size() <<   "\",";
+		ss << "\"strip\":";
 		ss << "[";
 
-		for (uint32_t i = 0; i < this->m_pControll->getChain(chainID).pStrands.size(); ++i)
+		for (uint32_t i = 0; i < this->m_pControll->getChain(chainID).pStrips.size(); ++i)
 		{
-			ss << getStrand(chainID, i);
+			ss << getStrip(chainID, i);
 
-			if(i<this->m_pControll->getChain(chainID).pStrands.size()-1)
+			if(i<this->m_pControll->getChain(chainID).pStrips.size()-1)
 				ss << ",";
 		}
 		ss << "]";
@@ -71,18 +71,18 @@ namespace LEDCNTRL
 		return ss.str();
 	}
 
-	std::string  API::getStrand(int chainID, int strandID)
+	std::string  API::getStrip(int chainID, int stripID)
 	{
 		std::stringstream ss;
 
 		ss << "{";
 
-		const strand_t& strand = this->m_pControll->getStrand(chainID,strandID);
+		const strip_t& strip = this->m_pControll->getStrip(chainID,stripID);
 
-		ss << "\"strandid\":\""  << strand.id <<   "\",";
-		ss << "\"brightlimit\":\""  << strand.brightLimit <<   "\",";
-		ss << "\"pixelcount\":\""  << strand.numPixels <<   "\",";
-		ss << "\"activemodul\":\"" + getModulName(strand.updateModul) <<  "\"";
+		ss << "\"stripid\":\""  << strip.id <<   "\",";
+		ss << "\"brightlimit\":\""  << strip.brightLimit <<   "\",";
+		ss << "\"pixelcount\":\""  << strip.numPixels <<   "\",";
+		ss << "\"activemodul\":\"" + getModulName(strip.updateModul) <<  "\"";
 		ss << "}";
 
 		return ss.str();
@@ -100,14 +100,14 @@ namespace LEDCNTRL
 		return ss.str();
 	}
 
-	std::string API::getStrandModulConfig(uint32_t chainID, uint32_t strandID, EModul modulID)
+	std::string API::getStripModulConfig(uint32_t chainID, uint32_t stripID, EModul modulID)
 	{
 		std::stringstream ss;
 		const modul_config_solidColor* pcfg = nullptr;
 		switch (modulID)
 		{
 			case EModul::solidcolor:
-				pcfg = static_cast<const modul_config_solidColor*>(this->m_pControll->getStrandConfig(chainID, strandID));
+				pcfg = static_cast<const modul_config_solidColor*>(this->m_pControll->getStripConfig(chainID, stripID));
 				ss << "{";
 				ss << "\"solidColor\": ["  << pcfg->solidColor.r <<   "," << pcfg->solidColor.g <<   ","  << pcfg->solidColor.b <<   "," << "]";
 				ss << "}";
@@ -143,9 +143,9 @@ namespace LEDCNTRL
 		this->m_pControll->setChainModul(ModulID, chainID);
 	}
 
-	void API::setStrandModul( EModul modulID, int chainID, int strandID)
+	void API::setStripModul( EModul modulID, int chainID, int stripID)
 	{
-		this->m_pControll->setStrandModul(modulID, chainID, strandID);
+		this->m_pControll->setStripModul(modulID, chainID, stripID);
 	}
 
 
@@ -154,14 +154,14 @@ namespace LEDCNTRL
 		this->m_pControll->initChain(chainID);
 	}
 
-	uint32_t API::createChain(strandchain_t chainDesc)
+	uint32_t API::createChain(stripchain_t chainDesc)
 	{
 		return this->m_pControll->createChain(chainDesc);
 	}
 
-	uint32_t API::appendStrand(int chainID, strand_t strandDesc)
+	uint32_t API::appendStrip(int chainID, strip_t stripDesc)
 	{
-		return this->m_pControll->appendStrand(chainID, strandDesc);
+		return this->m_pControll->appendStrip(chainID, stripDesc);
 	}
 
 }

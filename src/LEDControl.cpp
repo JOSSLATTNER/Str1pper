@@ -6,7 +6,7 @@ namespace LEDCNTRL
 	//typedef void(*ModuleLoop_t)(void* p);
 	LEDControl::LEDControl()
 	{
-		this->m_pStrandChains.clear();
+		this->m_pStripChains.clear();
 	}
 
 	LEDControl::~LEDControl()
@@ -15,44 +15,44 @@ namespace LEDCNTRL
 
 	void LEDControl::update()
 	{
-		Serial.println("Updateing LEDs!");
+		/*Serial.println("Updateing LEDs!");*/
 
-		for (int i = 0; i < this->m_pStrandChains.size(); ++i)
+		for (int i = 0; i < this->m_pStripChains.size(); ++i)
 		{
-			for (int s = 0; s < this->m_pStrandChains[i].pStrands.size(); ++s)
+			for (int s = 0; s < this->m_pStripChains[i].pStrips.size(); ++s)
 			{
-				//this->m_pStrandChains[i].pStrands[s].updateModul(&this->m_pStrandChains[i].pStrands[s]);
+				//this->m_pStripChains[i].pStrips[s].updateModul(&this->m_pStripChains[i].pStrips[s]);
 
-				if (this->m_pStrandChains[i].pStrands[s].pParam == nullptr)
+				if (this->m_pStripChains[i].pStrips[s].pParam == nullptr)
 					continue;
 
-				switch (this->m_pStrandChains[i].pStrands[s].updateModul)
+				switch (this->m_pStripChains[i].pStrips[s].updateModul)
 				{
 				case EModul::solidcolor:
-					this->modul_Solidcolor(&this->m_pStrandChains[i].pStrands[s]);
+					this->modul_Solidcolor(&this->m_pStripChains[i].pStrips[s]);
 					break;
 				}
 			}
-			updateLEDs(&this->m_pStrandChains[i]);
+			updateLEDs(&this->m_pStripChains[i]);
 		}
 	}
 
 
-	void LEDControl::setStrandModul(EModul m, int ChainId, int StrandId)
+	void LEDControl::setStripModul(EModul m, int ChainId, int StripId)
 	{
-		Serial.print("Set strand modul for chain[");
+		Serial.print("Set strip modul for chain[");
 		Serial.print(ChainId);
 		Serial.print("]");
-		Serial.print(" strand[");
-		Serial.print(StrandId);
+		Serial.print(" strip[");
+		Serial.print(StripId);
 		Serial.println("]");
 
-		strand_t* pStrand = &this->m_pStrandChains[ChainId].pStrands[StrandId];
+		strip_t* pStrip = &this->m_pStripChains[ChainId].pStrips[StripId];
 
-		pStrand->updateModul = m;
+		pStrip->updateModul = m;
 
-		if (pStrand->pParam != nullptr)
-			free(pStrand->pParam);
+		if (pStrip->pParam != nullptr)
+			free(pStrip->pParam);
 
 		size_t size = 0;
 		switch (m)
@@ -61,8 +61,8 @@ namespace LEDCNTRL
 			size = sizeof(modul_config_solidColor);
 			break;
 		}
-		pStrand->pParam = malloc(size);
-		memset(pStrand->pParam, 0, size);
+		pStrip->pParam = malloc(size);
+		memset(pStrip->pParam, 0, size);
 	}
 
 	void LEDControl::setChainModul(EModul m, int chainID)
@@ -70,48 +70,46 @@ namespace LEDCNTRL
 		Serial.print("Set Chainmodul for[");
 		Serial.print(chainID);
 		Serial.println("]");
-		for (int i = 1; i < this->m_pStrandChains[chainID].pStrands.size(); ++i)
+		for (int i = 1; i < this->m_pStripChains[chainID].pStrips.size(); ++i)
 		{
-			this->m_pStrandChains[chainID].pStrands[i].updateModul = EModul::none;
-			free(this->m_pStrandChains[chainID].pStrands[i].pParam);
+			this->m_pStripChains[chainID].pStrips[i].updateModul = EModul::none;
+			free(this->m_pStripChains[chainID].pStrips[i].pParam);
 		}
 
-		this->setStrandModul(m, chainID, 0);
+		this->setStripModul(m, chainID, 0);
 	}
 
-	const void* LEDControl::getStrandConfig(int ChainId, int StrandId)
+	void* LEDControl::getStripConfig(int ChainId, int stripId)
 	{
-		return this->m_pStrandChains[ChainId].pStrands[StrandId].pParam;
+		return this->m_pStripChains[ChainId].pStrips[stripId].pParam;
 	}
 
-	void LEDControl::modul_Solidcolor(strand_t* pStrand)
+	void LEDControl::modul_Solidcolor(strip_t* pStrip)
 	{
-		Serial.print("Run modul Solidcolor for Strand[");
-		Serial.print(pStrand->id);
-		Serial.println("]");
+		/*Serial.print("Run modul Solidcolor for Strip[");
+		Serial.print(pStrip->id);
+		Serial.println("]");*/
 		
-		modul_config_solidColor* cfg = static_cast<modul_config_solidColor*>(pStrand->pParam);
+		modul_config_solidColor* cfg = static_cast<modul_config_solidColor*>(pStrip->pParam);
 
 		if (cfg == nullptr)
 			return;
 
-		for (int i = 0; i < pStrand->numPixels; ++i)
+		for (int i = 0; i < pStrip->numPixels; ++i)
 		{
-			pStrand->pixels[i] = cfg->solidColor;
+			pStrip->pixels[i] = cfg->solidColor;
 		}
 	}
 
-	uint32_t LEDControl::createChain(strandchain_t chainDesc)
+	uint32_t LEDControl::createChain(stripchain_t chainDesc)
 	{
-
-
-		chainDesc.id = this->m_pStrandChains.size();
+		chainDesc.id = this->m_pStripChains.size();
 		chainDesc.pWholePixels = nullptr;
 		chainDesc.totalPixel = 0;
 
-		this->m_pStrandChains.push_back(chainDesc);
+		this->m_pStripChains.push_back(chainDesc);
 
-		this->appendStrand(chainDesc.id, {});
+		this->appendStrip(chainDesc.id, {});
 
 		Serial.print("Created Chain[");
 		Serial.print(chainDesc.id);
@@ -126,90 +124,90 @@ namespace LEDCNTRL
 		Serial.print(chainID);
 		Serial.println("]");
 		
-		strandchain_t* pStrand = &this->m_pStrandChains[chainID];
+		stripchain_t* pStrip = &this->m_pStripChains[chainID];
 
-		m_pStrandChains[chainID].pWholePixels = static_cast<pixelColor_t*>(malloc(m_pStrandChains[chainID].totalPixel * sizeof(pixelColor_t)));
-		memset(m_pStrandChains[chainID].pWholePixels, 1, m_pStrandChains[chainID].totalPixel * sizeof(pixelColor_t));
+		m_pStripChains[chainID].pWholePixels = static_cast<pixelColor_t*>(malloc(m_pStripChains[chainID].totalPixel * sizeof(pixelColor_t)));
+		memset(m_pStripChains[chainID].pWholePixels, 1, m_pStripChains[chainID].totalPixel * sizeof(pixelColor_t));
 
-		// Itterate throug strands and init those
-		pixelColor_t* se = m_pStrandChains[chainID].pWholePixels;
+		// Itterate throug strips and init those
+		pixelColor_t* se = m_pStripChains[chainID].pWholePixels;
 
-		m_pStrandChains[chainID].pStrands[0].pixels = se;
-		m_pStrandChains[chainID].pStrands[0].numPixels = m_pStrandChains[chainID].totalPixel;
+		m_pStripChains[chainID].pStrips[0].pixels = se;
+		m_pStripChains[chainID].pStrips[0].numPixels = m_pStripChains[chainID].totalPixel;
 
-		for (int s = 1; s < m_pStrandChains[chainID].pStrands.size(); ++s)
+		for (int s = 1; s < m_pStripChains[chainID].pStrips.size(); ++s)
 		{
-			m_pStrandChains[chainID].pStrands[s].pixels = se;
-			memset(m_pStrandChains[chainID].pStrands[s].pixels, 0, sizeof(pixelColor_t)*m_pStrandChains[chainID].pStrands[s].numPixels);
+			m_pStripChains[chainID].pStrips[s].pixels = se;
+			memset(m_pStripChains[chainID].pStrips[s].pixels, 0, sizeof(pixelColor_t)*m_pStripChains[chainID].pStrips[s].numPixels);
 
-			se += m_pStrandChains[chainID].pStrands[s].numPixels;
+			se += m_pStripChains[chainID].pStrips[s].numPixels;
 			// if LEDCNT IS < 1 THROW ERRO
 		}
 
-		m_pStrandChains[chainID].init = true;
+		m_pStripChains[chainID].init = true;
 	}
 
-	uint32_t LEDControl::appendStrand(int chainID, strand_t strandDesc)
+	uint32_t LEDControl::appendStrip(int chainID, strip_t stripDesc)
 	{
-		strandDesc.id = this->m_pStrandChains[chainID].pStrands.size();
+		stripDesc.id = this->m_pStripChains[chainID].pStrips.size();
 
-		this->m_pStrandChains[chainID].totalPixel += strandDesc.numPixels;
+		this->m_pStripChains[chainID].totalPixel += stripDesc.numPixels;
 
-		this->m_pStrandChains[chainID].pStrands.push_back(strandDesc);
+		this->m_pStripChains[chainID].pStrips.push_back(stripDesc);
 
-		Serial.print("Created strand[");
-		Serial.print(strandDesc.id);
+		Serial.print("Created strip[");
+		Serial.print(stripDesc.id);
 		Serial.print("] on chain[");
 		Serial.print(chainID);
 		Serial.println("]");
 
-		return strandDesc.id;
+		return stripDesc.id;
 	}
 
 	uint32_t LEDControl::getChainCount()
 	{
-		return this->m_pStrandChains.size();
+		return this->m_pStripChains.size();
 	}
 
-	const strandchain_t& LEDControl::getChain(uint32_t chainID)
+	const stripchain_t& LEDControl::getChain(uint32_t chainID)
 	{
-		return this->m_pStrandChains[chainID];
+		return this->m_pStripChains[chainID];
 	}
 
-	const strand_t&  LEDControl::getStrand(uint32_t chainID, uint32_t strandID)
+	const strip_t&  LEDControl::getStrip(uint32_t chainID, uint32_t stripID)
 	{
-		return this->m_pStrandChains[chainID].pStrands[strandID];
+		return this->m_pStripChains[chainID].pStrips[stripID];
 	}
 
 
-	void LEDControl::updateLEDs(strandchain_t* pStrandChain)
+	void LEDControl::updateLEDs(stripchain_t* pStripChain)
 	{
 
-		Serial.print("Updateing Chain[");
-		Serial.print(pStrandChain->id);
-		Serial.println("]");
+		/*Serial.print("Updateing Chain[");
+		Serial.print(pStripChain->id);
+		Serial.println("]");*/
 
 		
-			for (uint16_t i = 0; i < pStrandChain->totalPixel; i++) 
+			for (uint16_t i = 0; i < pStripChain->totalPixel; i++) 
 			{
-				Serial.print(i);
+				/*Serial.print(i);
 				Serial.print("/");
-				Serial.println(pStrandChain->totalPixel);
+				Serial.println(pStripChain->totalPixel);
 				Serial.print("R[");
-				Serial.print(pStrandChain->pWholePixels[i].r);
+				Serial.print(pStripChain->pWholePixels[i].r);
 				Serial.print("] G[");
-				Serial.print(pStrandChain->pWholePixels[i].g);
+				Serial.print(pStripChain->pWholePixels[i].g);
 				Serial.print("] B[");
-				Serial.print(pStrandChain->pWholePixels[i].b);
-				Serial.println("]");
+				Serial.print(pStripChain->pWholePixels[i].b);
+				Serial.println("]");*/
 					
 
 			}
 		
 
-		Serial.print("Finish Updateing Chain[");
-		Serial.print(pStrandChain->id);
-		Serial.println("]");
+		/*Serial.print("Finish Updateing Chain[");
+		Serial.print(pStripChain->id);
+		Serial.println("]");*/
 	}
 
 		

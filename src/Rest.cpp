@@ -158,25 +158,28 @@ namespace LEDCNTRL
     JsonObject& jobj = jsonBuffer.parseObject(a_rJsonString);
     Serial.println(a_rJsonString);
 
-      /*if(!jobj.success())
+      if(!jobj.success())
       {
         Serial.println("parseObject() failed");
         return;
       }
 
-      if(jobj["command"] == "SET_MODULE")
-      {
-          ModuleIndex = jobj["data"]["module"];
-          Serial.print("ModulIndex:");
-          Serial.print(ModuleIndex);
-      }
       else if(jobj["command"] == "SET_COLOR")
       {
-          float r =  jobj["data"]["rgb"]["r"];
-          float g =  jobj["data"]["rgb"]["g"];
-          float b =  jobj["data"]["rgb"]["b"];
 
-          _Color = { r, g, b };
-      }*/
+          modul_config_solidColor cfg{0};
+
+          float r = jobj["data"]["rgb"]["r"];
+          float g = jobj["data"]["rgb"]["g"];
+          float b = jobj["data"]["rgb"]["b"];
+
+
+          cfg.solidColor.r = r * 255;
+          cfg.solidColor.g = g * 255;
+          cfg.solidColor.b = b * 255;
+
+
+         pAPI->setStripConfig<modul_config_solidColor>(0,1,cfg);
+      }
   }
 }

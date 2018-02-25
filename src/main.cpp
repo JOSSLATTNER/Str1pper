@@ -65,16 +65,16 @@ void setup()
    
 
     int c = pAPI->createChain({ 1 ,18,LEDCNTRL::LED_types::LED_TYPE_WS2812b_V2 });
-    int s = pAPI->appendStrand(0, { 12,128 });
+    int s = pAPI->appendStrip(0, { 12,128 });
 
     pAPI->initChain(c);
 
-    pAPI->setStrandModul(LEDCNTRL::EModul::solidcolor, c, s);
+    pAPI->setStripModul(LEDCNTRL::EModul::solidcolor, c, s);
 
     LEDCNTRL::modul_config_solidColor scfg;
 
     scfg.solidColor = LEDCNTRL::pixelFromRGB(42,0,71);
-    pAPI->setStrandConfig<LEDCNTRL::modul_config_solidColor>(c,s,scfg);
+    pAPI->setStripConfig<LEDCNTRL::modul_config_solidColor>(c,s,scfg);
 
 
 
@@ -86,7 +86,7 @@ void loop()
 {
   while(true)
   {
-    //pController->update();
+    pController->update();
   }
 }
 
