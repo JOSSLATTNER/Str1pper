@@ -4,7 +4,7 @@
 #include "LEDControl.h"
 #include <SPIFFS.h>
 
-Rest* pRest;
+LEDCNTRL::Rest* pRest;
 LEDCNTRL::LEDControl* pController;
 LEDCNTRL::API* pAPI;
 
@@ -54,15 +54,15 @@ void setupFS()
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     delay(200);
 
   //  runDebug();
     setupFS();
-
-    pRest = new Rest();
     pController = new LEDCNTRL::LEDControl();
     pAPI = new LEDCNTRL::API(pController);
+    pRest = new LEDCNTRL::Rest(pAPI);
+   
 
     int c = pAPI->createChain({ 1 ,18,LEDCNTRL::LED_types::LED_TYPE_WS2812b_V2 });
     int s = pAPI->appendStrand(0, { 12,128 });
