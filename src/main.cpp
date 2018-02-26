@@ -64,7 +64,7 @@ void setup()
     pRest = new LEDCNTRL::Rest(pAPI);
    
 
-    int c = pAPI->createChain({ 1 ,18,LEDCNTRL::LED_types::LED_TYPE_WS2812b_V2 });
+    int c = pAPI->createChain({ 0 ,GPIO_NUM_18,LEDCNTRL::LED_types::LED_TYPE_WS2812b_V2 });
     int s = pAPI->appendStrip(0, { 12,128 });
 
     pAPI->initChain(c);

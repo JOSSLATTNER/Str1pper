@@ -1,3 +1,5 @@
+#pragma once 
+
 #include "pixelColor_t.h"
 #include "Modules.h"
 

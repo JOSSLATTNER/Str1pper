@@ -20,7 +20,7 @@ namespace LEDCNTRL
 	{
 		private:
 			std::string WIFI_SSID = "xxxxx";
-			std::string WIFI_PASS = "xxxxxx";
+			std::string WIFI_PASS = "xxxxxxx";
 
 		private:
 			AsyncWebServer* pServer;

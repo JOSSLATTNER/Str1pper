@@ -17,9 +17,9 @@ namespace LEDCNTRL
 	{
 		/*Serial.println("Updateing LEDs!");*/
 
-		for (int i = 0; i < this->m_pStripChains.size(); ++i)
+		for (uint32_t i = 0; i < this->m_pStripChains.size(); ++i)
 		{
-			for (int s = 0; s < this->m_pStripChains[i].pStrips.size(); ++s)
+			for (uint32_t s = 0; s < this->m_pStripChains[i].pStrips.size(); ++s)
 			{
 				//this->m_pStripChains[i].pStrips[s].updateModul(&this->m_pStripChains[i].pStrips[s]);
 
@@ -38,7 +38,7 @@ namespace LEDCNTRL
 	}
 
 
-	void LEDControl::setStripModul(EModul m, int ChainId, int StripId)
+	void LEDControl::setStripModul(EModul m, uint32_t ChainId, uint32_t StripId)
 	{
 		Serial.print("Set strip modul for chain[");
 		Serial.print(ChainId);
@@ -65,7 +65,7 @@ namespace LEDCNTRL
 		memset(pStrip->pParam, 0, size);
 	}
 
-	void LEDControl::setChainModul(EModul m, int chainID)
+	void LEDControl::setChainModul(EModul m, uint32_t chainID)
 	{
 		Serial.print("Set Chainmodul for[");
 		Serial.print(chainID);
@@ -79,7 +79,7 @@ namespace LEDCNTRL
 		this->setStripModul(m, chainID, 0);
 	}
 
-	void* LEDControl::getStripConfig(int ChainId, int stripId)
+	void* LEDControl::getStripConfig(uint32_t ChainId, uint32_t stripId)
 	{
 		return this->m_pStripChains[ChainId].pStrips[stripId].pParam;
 	}
@@ -95,7 +95,7 @@ namespace LEDCNTRL
 		if (cfg == nullptr)
 			return;
 
-		for (int i = 0; i < pStrip->numPixels; ++i)
+		for (uint32_t i = 0; i < pStrip->numPixels; ++i)
 		{
 			pStrip->pixels[i] = cfg->solidColor;
 		}
@@ -135,7 +135,7 @@ namespace LEDCNTRL
 		m_pStripChains[chainID].pStrips[0].pixels = se;
 		m_pStripChains[chainID].pStrips[0].numPixels = m_pStripChains[chainID].totalPixel;
 
-		for (int s = 1; s < m_pStripChains[chainID].pStrips.size(); ++s)
+		for (uint32_t s = 1; s < m_pStripChains[chainID].pStrips.size(); ++s)
 		{
 			m_pStripChains[chainID].pStrips[s].pixels = se;
 			memset(m_pStripChains[chainID].pStrips[s].pixels, 0, sizeof(pixelColor_t)*m_pStripChains[chainID].pStrips[s].numPixels);
@@ -144,10 +144,12 @@ namespace LEDCNTRL
 			// if LEDCNT IS < 1 THROW ERRO
 		}
 
+		initDriver(chainID);
+
 		m_pStripChains[chainID].init = true;
 	}
 
-	uint32_t LEDControl::appendStrip(int chainID, strip_t stripDesc)
+	uint32_t LEDControl::appendStrip(uint32_t chainID, strip_t stripDesc)
 	{
 		stripDesc.id = this->m_pStripChains[chainID].pStrips.size();
 
@@ -187,9 +189,16 @@ namespace LEDCNTRL
 		Serial.print(pStripChain->id);
 		Serial.println("]");*/
 
-		
+		WS2812b_leddriver_config_t* cfg = static_cast<WS2812b_leddriver_config_t*>(pStripChain->driver_config);
+
 			for (uint16_t i = 0; i < pStripChain->totalPixel; i++) 
 			{
+
+				cfg->pBuffer[0 + i * 3] = pStripChain->pWholePixels[i].g;
+				cfg->pBuffer[1 + i * 3] = pStripChain->pWholePixels[i].r;
+				cfg->pBuffer[2 + i * 3] = pStripChain->pWholePixels[i].b;
+				
+				this->m_pDriverMap[pStripChain->ledType]->UpdateLEDS(pStripChain);
 				/*Serial.print(i);
 				Serial.print("/");
 				Serial.println(pStripChain->totalPixel);
@@ -210,5 +219,42 @@ namespace LEDCNTRL
 		Serial.println("]");*/
 	}
 
-		
+	void LEDControl::initDriver(uint32_t chainID)
+	{
+		stripchain_t* pStripChain = &this->m_pStripChains[chainID];
+
+		switch(pStripChain->ledType)
+		{
+			case LED_types::LED_TYPE_WS2812b_V2 :
+				pStripChain->driver_config = static_cast<WS2812b_leddriver_config_t*>(malloc(sizeof(WS2812b_leddriver_config_t)));
+				WS2812b_leddriver_config_t* cfg = static_cast<WS2812b_leddriver_config_t*>(pStripChain->driver_config);
+
+
+				cfg->gpioPin = pStripChain->gpioPin;
+				cfg->rmtChannel = pStripChain->rmtChannel;
+				cfg->buffer_len = pStripChain->totalPixel;
+				cfg->pBuffer = static_cast<uint8_t*>(malloc(cfg->buffer_len));
+				cfg->buffer_pos = 0;
+				cfg->buffer_half = 0;
+				cfg->buffer_isDirty = 0;
+				
+
+				cfg->pulsepair[0].level0 = 1;
+				cfg->pulsepair[0].level1 = 0;
+				cfg->pulsepair[0].duration0 = 400 / (DIVIDER * DURATION);
+				cfg->pulsepair[0].duration1 = 850 / (DIVIDER * DURATION);
+				
+				cfg->pulsepair[1].level0 = 1;
+				cfg->pulsepair[1].level1 = 0;
+				cfg->pulsepair[1].duration0 = 850 / (DIVIDER * DURATION);
+				cfg->pulsepair[1].duration1 = 400 / (DIVIDER * DURATION);
+				
+				if(this->m_pDriverMap[pStripChain->ledType] == nullptr)
+					this->m_pDriverMap[pStripChain->ledType] = static_cast<LEDDriver*>(new WS2812bDriver());
+
+				this->m_pDriverMap[pStripChain->ledType]->InitDriver(pStripChain);
+				break;
+		}
+	}
+
 }
