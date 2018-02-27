@@ -19,8 +19,8 @@ namespace LEDCNTRL
 	class Rest
 	{
 		private:
-			std::string WIFI_SSID = "xxxxx";
-			std::string WIFI_PASS = "xxxxxx";
+			std::string WIFI_SSID = "o2-WLAN51";
+			std::string WIFI_PASS = "6689171153799911";
 
 		private:
 			AsyncWebServer* pServer;
