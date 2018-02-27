@@ -68,7 +68,7 @@ namespace LEDCNTRL
 		const strip_t& getStrip(uint32_t chainID, uint32_t stripID);
 		
 		void modul_Solidcolor(strip_t* pStrip);
-
+		void runDriver();
 
 	private:
 		void updateLEDs(stripchain_t* pStripChain);

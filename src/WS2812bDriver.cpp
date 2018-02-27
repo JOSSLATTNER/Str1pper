@@ -94,30 +94,39 @@ namespace LEDCNTRL
 	{
 		this->m_pStripChains.push_back(pStripChain);
 		
+
+		WS2812b_leddriver_config_t* cfg = static_cast<WS2812b_leddriver_config_t*>(pStripChain->driver_config);
+
+		//size_t buffer_len = 3 * pStripChain->totalPixel * sizeof(uint8_t);
+		//cfg->pBuffer = static_cast<uint8_t*>(malloc(buffer_len ));
+		
+		//printf("Created Buffer with length %d", buffer_len);
+		//fflush(stdout);
 		DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_RMT_CLK_EN);
-  		DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_RMT_RST);
+	  	DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_RMT_RST);
+	  	
+	  	RMT.apb_conf.fifo_mask = 1;  // Enable memory access, instead of FIFO mode
+	  	RMT.apb_conf.mem_tx_wrap_en = 1;  // Wrap around when hitting end of buffer
 
-  		rmt_set_pin(static_cast<rmt_channel_t>(pStripChain->rmtChannel), RMT_MODE_TX,static_cast<gpio_num_t>(pStripChain->gpioPin));
-	
-  		RMT.apb_conf.fifo_mask = 1;  // Enable memory access, instead of FIFO mode
-  		RMT.apb_conf.mem_tx_wrap_en = 1;  // Wrap around when hitting end of buffer
-  		RMT.conf_ch[pStripChain->rmtChannel].conf0.div_cnt = DIVIDER;
-    	RMT.conf_ch[pStripChain->rmtChannel].conf0.mem_size = 1;
-    	RMT.conf_ch[pStripChain->rmtChannel].conf0.carrier_en = 0;
-    	RMT.conf_ch[pStripChain->rmtChannel].conf0.carrier_out_lv = 1;
-    	RMT.conf_ch[pStripChain->rmtChannel].conf0.mem_pd = 0;
-  
-    	RMT.conf_ch[pStripChain->rmtChannel].conf1.rx_en = 0;
-    	RMT.conf_ch[pStripChain->rmtChannel].conf1.mem_owner = 0;
-   	 	RMT.conf_ch[pStripChain->rmtChannel].conf1.tx_conti_mode = 0;  //loop back mode
-    	RMT.conf_ch[pStripChain->rmtChannel].conf1.ref_always_on = 1;  // use apb clock: 80M
-    	RMT.conf_ch[pStripChain->rmtChannel].conf1.idle_out_en = 1;
-    	RMT.conf_ch[pStripChain->rmtChannel].conf1.idle_out_lv = 0;
+	  	RMT.conf_ch[pStripChain->rmtChannel].conf0.div_cnt = DIVIDER;
+		RMT.conf_ch[pStripChain->rmtChannel].conf0.mem_size = 1;
+		RMT.conf_ch[pStripChain->rmtChannel].conf0.carrier_en = 0;
+		RMT.conf_ch[pStripChain->rmtChannel].conf0.carrier_out_lv = 1;
+		RMT.conf_ch[pStripChain->rmtChannel].conf0.mem_pd = 0;
 
-    	RMT.tx_lim_ch[pStripChain->rmtChannel].limit = MAX_PULSES;
+		RMT.conf_ch[pStripChain->rmtChannel].conf1.rx_en = 0;
+		RMT.conf_ch[pStripChain->rmtChannel].conf1.mem_owner = 0;
+		RMT.conf_ch[pStripChain->rmtChannel].conf1.tx_conti_mode = 0;    //loop back mode.
+		RMT.conf_ch[pStripChain->rmtChannel].conf1.ref_always_on = 1;    // use apb clock: 80M
+		RMT.conf_ch[pStripChain->rmtChannel].conf1.idle_out_en = 1;
+		RMT.conf_ch[pStripChain->rmtChannel].conf1.idle_out_lv = 0;
 
-    	RMT.int_ena.val |= tx_thr_event_offsets[pStripChain->rmtChannel];  // RMT.int_ena.ch<n>_tx_thr_event = 1;
-    	RMT.int_ena.val |= tx_end_offsets[pStripChain->rmtChannel];  // RMT.int_ena.ch<n>_tx_end = 1;
+		RMT.tx_lim_ch[pStripChain->rmtChannel].limit = MAX_PULSES;
+
+	    RMT.int_ena.val |= tx_thr_event_offsets[pStripChain->rmtChannel];  // RMT.int_ena.ch<n>_tx_thr_event = 1;
+	    RMT.int_ena.val |= tx_end_offsets[pStripChain->rmtChannel];  // RMT.int_ena.ch<n>_tx_end = 1;
+
+	    rmt_set_pin(static_cast<rmt_channel_t>(pStripChain->rmtChannel), RMT_MODE_TX,static_cast<gpio_num_t>(pStripChain->gpioPin));
 	}
 
 	void WS2812bDriver::UpdateLEDS(stripchain_t* pStripChain)
@@ -144,7 +153,8 @@ namespace LEDCNTRL
 
 	void WS2812bDriver::copyToRmtBlock_half(stripchain_t* pStripChain)
 	{
-		uint16_t i, j, offset, len, bit;
+		uint16_t i, j, offset, len;
+		uint8_t bit;
 
 		WS2812b_leddriver_config_t* cfg = static_cast<WS2812b_leddriver_config_t*>(pStripChain->driver_config);
 
@@ -166,7 +176,13 @@ namespace LEDCNTRL
 		for (i = 0; i < len; i++) 
 		{
 		  	bit = cfg->pBuffer[i + cfg->buffer_pos];
-		  
+
+
+		  	/*Serial.print("Buffer Pos:");
+		  	Serial.print(i + cfg->buffer_pos);
+		  	Serial.print("Bit:");
+		  	Serial.println(bit);*/
+
 		  	for (j = 0; j < 8; j++, bit <<= 1) 
 		  	{
 		    	RMTMEM.chan[cfg->rmtChannel].data32[j + i * 8 + offset].val =	cfg->pulsepair[(bit >> 7) & 0x01].val;

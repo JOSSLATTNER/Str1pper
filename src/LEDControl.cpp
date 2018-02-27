@@ -97,7 +97,10 @@ namespace LEDCNTRL
 
 		for (uint32_t i = 0; i < pStrip->numPixels; ++i)
 		{
-			pStrip->pixels[i] = cfg->solidColor;
+			pStrip->pixels[i].r = static_cast<uint8_t>( cfg->solidColor.r * pStrip->brightLimit);
+			pStrip->pixels[i].g = static_cast<uint8_t>( cfg->solidColor.g * pStrip->brightLimit);
+			pStrip->pixels[i].b = static_cast<uint8_t>( cfg->solidColor.b * pStrip->brightLimit);
+				
 		}
 	}
 
@@ -194,20 +197,20 @@ namespace LEDCNTRL
 			for (uint16_t i = 0; i < pStripChain->totalPixel; i++) 
 			{
 
-				cfg->pBuffer[0 + i * 3] = pStripChain->pWholePixels[i].g;
+				cfg->pBuffer[0 + i * 3] = pStripChain->pWholePixels[i].g ;
 				cfg->pBuffer[1 + i * 3] = pStripChain->pWholePixels[i].r;
 				cfg->pBuffer[2 + i * 3] = pStripChain->pWholePixels[i].b;
 				
-				this->m_pDriverMap[pStripChain->ledType]->UpdateLEDS(pStripChain);
+				
 				/*Serial.print(i);
 				Serial.print("/");
 				Serial.println(pStripChain->totalPixel);
 				Serial.print("R[");
-				Serial.print(pStripChain->pWholePixels[i].r);
+				Serial.print(cfg->pBuffer[1 + i * 3]);
 				Serial.print("] G[");
-				Serial.print(pStripChain->pWholePixels[i].g);
+				Serial.print(cfg->pBuffer[0 + i * 3]);
 				Serial.print("] B[");
-				Serial.print(pStripChain->pWholePixels[i].b);
+				Serial.print(cfg->pBuffer[2 + i * 3]);
 				Serial.println("]");*/
 					
 
@@ -232,7 +235,7 @@ namespace LEDCNTRL
 
 				cfg->gpioPin = pStripChain->gpioPin;
 				cfg->rmtChannel = pStripChain->rmtChannel;
-				cfg->buffer_len = pStripChain->totalPixel;
+				cfg->buffer_len = pStripChain->totalPixel*3;
 				cfg->pBuffer = static_cast<uint8_t*>(malloc(cfg->buffer_len));
 				cfg->buffer_pos = 0;
 				cfg->buffer_half = 0;
@@ -241,13 +244,13 @@ namespace LEDCNTRL
 
 				cfg->pulsepair[0].level0 = 1;
 				cfg->pulsepair[0].level1 = 0;
-				cfg->pulsepair[0].duration0 = 400 / (DIVIDER * DURATION);
-				cfg->pulsepair[0].duration1 = 850 / (DIVIDER * DURATION);
+				cfg->pulsepair[0].duration0 = 350 / (DIVIDER * DURATION);
+				cfg->pulsepair[0].duration1 = 900 / (DIVIDER * DURATION);
 				
 				cfg->pulsepair[1].level0 = 1;
 				cfg->pulsepair[1].level1 = 0;
-				cfg->pulsepair[1].duration0 = 850 / (DIVIDER * DURATION);
-				cfg->pulsepair[1].duration1 = 400 / (DIVIDER * DURATION);
+				cfg->pulsepair[1].duration0 = 900 / (DIVIDER * DURATION);
+				cfg->pulsepair[1].duration1 = 350 / (DIVIDER * DURATION);
 				
 				if(this->m_pDriverMap[pStripChain->ledType] == nullptr)
 					this->m_pDriverMap[pStripChain->ledType] = static_cast<LEDDriver*>(new WS2812bDriver());
@@ -257,4 +260,13 @@ namespace LEDCNTRL
 		}
 	}
 
+	void LEDControl::runDriver()
+	{
+		//Serial.println("Driver Update");
+		//for(auto l : this->m_pDriverMap[pStripChain->ledType]->UpdateLEDS(pStripChain); ) 	
+		for(auto s : m_pStripChains)
+		{
+			this->m_pDriverMap[s.ledType]->UpdateLEDS(&s);
+		}	
+	}
 }

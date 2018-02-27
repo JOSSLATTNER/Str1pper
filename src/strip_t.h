@@ -8,7 +8,7 @@ namespace LEDCNTRL
 	typedef struct
 	{
 		int numPixels;
-		int brightLimit;
+		float brightLimit;
 		pixelColor_t * pixels;
 		EModul updateModul;
 		void* pParam;

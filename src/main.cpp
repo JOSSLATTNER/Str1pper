@@ -8,6 +8,16 @@ LEDCNTRL::Rest* pRest;
 LEDCNTRL::LEDControl* pController;
 LEDCNTRL::API* pAPI;
 
+
+void updateDriver(void* arg)
+{
+  while(true)
+  {
+    pController->runDriver();
+  }
+  
+}
+
 void listDir(fs::FS &fs, const char * dirname, uint8_t levels) {
   Serial.printf("Listing directory: %s\n", dirname);
 
@@ -54,6 +64,8 @@ void setupFS()
 
 void setup()
 {
+
+
     Serial.begin(115200);
     delay(200);
 
@@ -65,21 +77,30 @@ void setup()
    
 
     int c = pAPI->createChain({ 0 ,GPIO_NUM_18,LEDCNTRL::LED_types::LED_TYPE_WS2812b_V2 });
-    int s = pAPI->appendStrip(0, { 12,128 });
+    int s = pAPI->appendStrip(0, { 300,0.65f });
+
+
 
     pAPI->initChain(c);
 
     pAPI->setStripModul(LEDCNTRL::EModul::solidcolor, c, s);
 
-    LEDCNTRL::modul_config_solidColor scfg;
 
-    scfg.solidColor = LEDCNTRL::pixelFromRGB(42,0,71);
+
+    LEDCNTRL::modul_config_solidColor scfg;
+    LEDCNTRL::modul_config_solidColor scfgg;
+
+    scfg.solidColor = LEDCNTRL::pixelFromRGB(45,12,87);
+    
     pAPI->setStripConfig<LEDCNTRL::modul_config_solidColor>(c,s,scfg);
 
-
+    //scfg.solidColor = LEDCNTRL::pixelFromRGB(255,0,0);
+    
 
     Serial.println();
     Serial.println("Running Firmware.");
+
+     xTaskCreate(updateDriver,"UpdateDriver",10000,NULL,1,NULL);
 }
 
 void loop()
