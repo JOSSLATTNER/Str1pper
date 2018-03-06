@@ -1,18 +1,15 @@
 #pragma once 
-#include "LEDTypes.h"
-#include "pixelColor_t.h"
-#include "strip_t.h"
-#include <vector>
+
 namespace LEDCNTRL
 {
 	typedef struct
 	{
-		uint8_t rmtChannel;
-		gpio_num_t gpioPin;
-		LED_types ledType;
+		int rmtChannel;
+		int gpioNum;
+		int ledType;
 		std::vector<strip_t> pStrips;
 		pixelColor_t* pWholePixels;
-		void* driver_config;
+		void * _stateVars;
 		int totalPixel;
 		int id;
 		bool init;

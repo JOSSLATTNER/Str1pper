@@ -38,7 +38,7 @@ namespace LEDCNTRL
 
 		ss << "{";
 		ss << "\"chainid\":\""  << chain.id <<   "\",";
-		ss << "\"gpiopin\":\""  << chain.gpioPin <<   "\",";
+		ss << "\"gpiopin\":\""  << chain.gpioNum <<   "\",";
 		ss << "\"ledtype\":\""  << chain.ledType <<   "\",";
 		ss << "\"rmtchannel\":\""  << chain.rmtChannel <<   "\",";
 		ss << "\"totalpixel\":\""  << chain.totalPixel <<   "\",";
